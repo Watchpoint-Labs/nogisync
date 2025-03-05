@@ -57,7 +57,6 @@ jobs:
           - name: Run Tests
             run: uv run pytest
           - name: Process Coverage Report
-            if: ${{ matrix.coverage }}
             run: |
                 uv run coverage html --skip-covered --skip-empty
 
