@@ -44,6 +44,12 @@ line-ending = "auto"
 [tool.setuptools]
 py-modules = []
 
+[tool.pytest.ini_options]
+
+python_files = ["test_*.py", "tests.py"]
+addopts = "-ra --cov=. --no-cov-on-fail --cov-report=html --cov-report=term"
+
+
 [tool.uv]
 python-preference = "managed"
 default-groups = ["dev"]

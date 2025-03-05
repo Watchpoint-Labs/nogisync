@@ -58,8 +58,6 @@ jobs:
 | `notion_api_key` | Notion API key for authentication | Yes | - |
 | `notion_parent_page_id` | ID of the parent page in Notion | Yes | - |
 | `source_path` | Path to directory containing markdown files | No | `.` |
-| `file_patterns` | Glob patterns for files to sync | No | `**/*.md` |
-| `sync_direction` | Direction of sync (github-to-notion, notion-to-github, or bidirectional) | No | `github-to-notion` |
 
 ## Example Directory Structure
 
