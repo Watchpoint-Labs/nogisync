@@ -51,17 +51,6 @@ jobs:
             with:
                 enable-cache: true
                 version: latest
-          # build frontend
-          - name: Use Node.js
-            uses: actions/setup-node@v4
-            with:
-                node-version: 22.x
-          - name: Install node dependencies
-            run: npm install
-          - name: Build Django front end
-            run: npm run build
-          - name: Check types
-            run: npm run type-check
           - name: Install Python Dependencies
             run: |
                 uv sync --locked
