@@ -48,7 +48,7 @@ jobs:
         with:
           notion_api_key: ${{ secrets.NOTION_API_KEY }}
           notion_parent_page_id: 'your-parent-page-id'
-          source_path: 'docs/'  # Directory containing markdown files
+          docs_path: 'docs/'  # Directory containing markdown files
 ```
 
 ## Configuration Options
@@ -57,7 +57,7 @@ jobs:
 |-------|-------------|----------|---------|
 | `notion_api_key` | Notion API key for authentication | Yes | - |
 | `notion_parent_page_id` | ID of the parent page in Notion | Yes | - |
-| `source_path` | Path to directory containing markdown files | No | `.` |
+| `docs_path` | Path to directory containing markdown files | No | `.` |
 
 ## Example Directory Structure
 

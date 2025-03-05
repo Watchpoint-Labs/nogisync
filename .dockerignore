@@ -1,0 +1,12 @@
+**/.env
+venv
+.venv
+.direnv
+.pytest_cache
+.venv
+.ruff_cache
+.coverage
+.git
+.mypy_cache
+.pre-commit-config.yaml
+.gitignore

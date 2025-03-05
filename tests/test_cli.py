@@ -2,10 +2,10 @@ from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch
 
-from nogisync.__main__ import get_content, get_title, main, process_page_hierarchy
+from nogisync.cli import get_content, get_title, main, process_page_hierarchy
 
 
-class TestMain(TestCase):
+class TestCli(TestCase):
     def test_get_title_with_frontmatter(self):
         post = {"attributes": {"title": "Test Title"}}
         md_file = Path("test_file.md")
