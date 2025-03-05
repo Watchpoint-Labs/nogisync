@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+name: Sync Markdown in Github to Notion
+description: Sync markdown changes in Github to Notion
+author: Watchpoint Labs <hello@watchpointlabs.com>
+branding:
+  color: purple
+  icon: book-open
+inputs:
+  notion_api_key:
+    description: 'Notion integration token'
+    required: true
+  docs_path:
+    description: 'Directory containing the markdown files to sync'
+    required: true
+  notion_parent_page_id:
+    description: 'Notion parent page id'
+    required: true
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - "uv"
+    - "run"
+    - "python"
+    - "-m"
+    - "nogisync.cli"
+    - "--token"
+    - ${{ inputs.notion_api_key }}
+    - "--path"
+    - ${{ inputs.docs_path }}
+    - "--parent-page-id"
+    - ${{ inputs.notion_parent_page_id }}

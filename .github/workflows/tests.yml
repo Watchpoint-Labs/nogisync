@@ -1,0 +1,98 @@
+---
+name: Run Lint & Tests
+on:
+    pull_request:
+    push:
+        branches:
+          - main
+jobs:
+    code-style:
+        name: Check code style
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          - name: Set up Python 3.12
+            uses: actions/setup-python@v5
+            with:
+                python-version: 3.12
+                cache: pip
+                cache-dependency-path: |
+                    uv.lock
+          - name: Run pre-commit hooks
+            uses: pre-commit/action@v3.0.0
+    mypy:
+        name: Run mypy
+        runs-on: ubuntu-latest
+        timeout-minutes: 60
+        steps:
+          - uses: actions/checkout@v4
+          - name: Install uv
+            uses: astral-sh/setup-uv@v4
+            with:
+                enable-cache: true
+                version: latest
+          - name: Install Dependencies
+            run: |
+                uv sync --locked
+          - name: Run mypy
+            run: |
+                uv run mypy .
+    tests:
+        name: Run tests
+        runs-on: ubuntu-latest
+        timeout-minutes: 60
+        permissions:
+            pull-requests: write
+            contents: read
+        steps:
+          - uses: actions/checkout@v4
+          - name: Install uv
+            uses: astral-sh/setup-uv@v4
+            with:
+                enable-cache: true
+                version: latest
+          # build frontend
+          - name: Use Node.js
+            uses: actions/setup-node@v4
+            with:
+                node-version: 22.x
+          - name: Install node dependencies
+            run: npm install
+          - name: Build Django front end
+            run: npm run build
+          - name: Check types
+            run: npm run type-check
+          - name: Install Python Dependencies
+            run: |
+                uv sync --locked
+          - name: Run Tests
+            run: uv run pytest
+          - name: Process Coverage Report
+            if: ${{ matrix.coverage }}
+            run: |
+                uv run coverage html --skip-covered --skip-empty
+
+                # Report and write to summary.
+                uv run coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
+
+                # Generate a comment for the PR
+                echo -e "## Code Coverage Report\n<details>\n  <summary>Coverage Report</summary>\n" > comment.md
+                cat $GITHUB_STEP_SUMMARY | sed -e 's/^/  /' >> comment.md
+                echo -e "\n</details>" >> comment.md
+                echo -e "\nTotal Coverage: " >> comment.md
+                cat $GITHUB_STEP_SUMMARY | tail -3 | head -1 | awk -F '|' '{print $7}' | sed -e 's/ //' >> comment.md
+
+                # Report again and fail if under 80%.
+                uv run coverage report --fail-under=80
+          - name: Comment on PR
+            uses: Watchpoint-Labs/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b
+            if: ${{ github.event_name == 'pull_request' }}
+            with:
+                file-path: comment.md
+                comment-tag: coverage-comment
+          - name: Upload HTML report if check failed.
+            uses: actions/upload-artifact@v4
+            if: ${{ failure() }}
+            with:
+                name: html-report
+                path: htmlcov
