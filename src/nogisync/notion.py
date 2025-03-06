@@ -35,11 +35,22 @@ def create_notion_page(client: notion_client.Client, parent_page_id: str, title:
     blocks = parse_md(content)
 
     # Create the page
-    new_page = client.pages.create(
-        parent={"page_id": parent_page_id},
-        properties={"title": [{"text": {"content": title}}]},
-        children=blocks,
+    new_page = cast(
+        dict,
+        client.pages.create(
+            parent={"page_id": parent_page_id},
+            properties={"title": [{"text": {"content": title}}]},
+            children=[],
+        ),
     )
+
+    # Add the blocks to the page
+    while len(blocks) > 100:
+        client.blocks.children.append(block_id=new_page["id"], children=blocks[:100])
+        blocks = blocks[100:]
+
+    client.blocks.children.append(block_id=new_page["id"], children=blocks)
+
     return cast(dict, new_page)
 
 
@@ -53,4 +64,8 @@ def update_notion_page(client: notion_client.Client, page_id: str, content: str)
         client.blocks.delete(block_id=block["id"])
 
     # Then add new blocks
+    while len(blocks) > 100:
+        client.blocks.children.append(block_id=page_id, children=blocks[:100])
+        blocks = blocks[100:]
+
     client.blocks.children.append(block_id=page_id, children=blocks)

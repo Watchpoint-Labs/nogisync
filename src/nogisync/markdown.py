@@ -180,7 +180,8 @@ def convert_markdown_table_to_latex(text):
         for j, cell in enumerate(modified_content):
             cell_text = f"\\textsf{{{cell.strip()}}}"
             if i == 0 and has_header:
-                cell_text = f"\\textsf{{\\textbf{{{cell.strip()}}}}}"
+                cell_content = process_inline_formatting(cell.strip())[0]["text"]["content"]
+                cell_text = f"\\textsf{{\\textbf{{{cell_content}}}}}"
             if j == len(modified_content) - 1:
                 cell_text += " \\\\\\hline\n"
             else:

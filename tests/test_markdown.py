@@ -24,6 +24,14 @@ class TestMarkdown(TestCase):
         self.assertIn("Cell 1", result)
         self.assertIn("\\end{array}", result)
 
+        # Test table with bold header
+        markdown_table = "| **Header 1** | **Header 2** |\n|----------|----------|\n| Cell 1 | Cell 2 |"
+        result = convert_markdown_table_to_latex(markdown_table)
+        self.assertIn("\\begin{array}", result)
+        self.assertIn("\\textbf{Header 1}", result)
+        self.assertIn("Cell 1", result)
+        self.assertIn("\\end{array}", result)
+
     def test_parse_markdown_to_notion_blocks_blockquote(self):
         text = "> This is a quote"
         result = parse_markdown_to_notion_blocks(text)
