@@ -19,11 +19,7 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - "uv"
-    - "run"
-    - "python"
-    - "-m"
-    - "nogisync.cli"
+    - "nogisync"
     - "--token"
     - ${{ inputs.notion_api_key }}
     - "--path"

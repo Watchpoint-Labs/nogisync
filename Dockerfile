@@ -6,9 +6,10 @@ WORKDIR /code
 # copy just the pyproject and uv.lock files and install before rest of code to avoid having to
 # reinstall packages during build every time code changes
 COPY pyproject.toml uv.lock ./
+COPY src/ ./src/
 RUN --mount=type=cache,target=/root/.cache \
     uv sync --locked --no-dev
 
-COPY nogisync /code/nogisync
+RUN uv build && uv pip install --system dist/nogisync-*.whl
 
-CMD ["uv", "run", "--no-dev", "python", "-m", "nogisync.cli", "--help"]
+CMD ["nogisync", "--help"]

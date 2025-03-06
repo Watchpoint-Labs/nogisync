@@ -1,16 +1,24 @@
 [project]
-name = "notion-github-sync"
+name = "nogisync"
 description = "Sync GitHub markdown files to Notion"
 authors = [{ name = "Watchpoint Labs", email = "hello@watchpointlabs.com" }]
 requires-python = "~=3.12.0"
 version = "1.0.0"
 dependencies = [
     "notion-client",
-    "pygithub",
-    "python-dotenv",
     "frontmatter",
     "click"
 ]
+
+[project.scripts]
+nogisync = "nogisync.cli:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
@@ -53,6 +61,7 @@ addopts = "-ra --cov=. --no-cov-on-fail --cov-report=html --cov-report=term"
 [tool.uv]
 python-preference = "managed"
 default-groups = ["dev"]
+package=true
 
 [tool.uv.pip]
 python = "3.12"
