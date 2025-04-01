@@ -300,10 +300,20 @@ def parse_markdown_to_notion_blocks(markdown):
                 stack[-1].append(item)
             else:  # indent > current_indent
                 # Nested item, add it as a child of the previous item
-                if "children" not in stack[-1][-1]["numbered_list_item"]:
-                    stack[-1][-1]["numbered_list_item"]["children"] = []
-                stack[-1][-1]["numbered_list_item"]["children"].append(item)
-                stack.append(stack[-1][-1]["numbered_list_item"]["children"])  # Add a new level to the stack
+                previous_parent = stack[-1][-1]
+                if "bulleted_list_item" in previous_parent:
+                    previous_parent_list_item_type = "bulleted_list_item"
+                elif "numbered_list_item" in previous_parent:
+                    previous_parent_list_item_type = "numbered_list_item"
+                else:
+                    raise ValueError("Previous parent is not a list item")
+
+                if "children" not in previous_parent[previous_parent_list_item_type]:
+                    previous_parent[previous_parent_list_item_type]["children"] = []
+                previous_parent[previous_parent_list_item_type]["children"].append(item)
+                stack.append(
+                    previous_parent[previous_parent_list_item_type]["children"]
+                )  # Add a new level to the stack
                 current_indent += 1
 
             continue
@@ -329,10 +339,20 @@ def parse_markdown_to_notion_blocks(markdown):
                 stack[-1].append(item)
             else:  # indent > current_indent
                 # Nested item, add it as a child of the previous item
-                if "children" not in stack[-1][-1]["bulleted_list_item"]:
-                    stack[-1][-1]["bulleted_list_item"]["children"] = []
-                stack[-1][-1]["bulleted_list_item"]["children"].append(item)
-                stack.append(stack[-1][-1]["bulleted_list_item"]["children"])  # Add a new level to the stack
+                previous_parent = stack[-1][-1]
+                if "bulleted_list_item" in previous_parent:
+                    previous_parent_list_item_type = "bulleted_list_item"
+                elif "numbered_list_item" in previous_parent:
+                    previous_parent_list_item_type = "numbered_list_item"
+                else:
+                    raise ValueError("Previous parent is not a list item")
+
+                if "children" not in previous_parent[previous_parent_list_item_type]:
+                    previous_parent[previous_parent_list_item_type]["children"] = []
+                previous_parent[previous_parent_list_item_type]["children"].append(item)
+                stack.append(
+                    previous_parent[previous_parent_list_item_type]["children"]
+                )  # Add a new level to the stack
                 current_indent += 1
 
             continue
