@@ -1,7 +1,9 @@
 import re
 
+NOTION_CONTENT_MAX_LENGTH = 2000
 
-def replace_part(parts, pattern, replace_function):
+
+def replace_part(parts, pattern, replace_function) -> list:
     # Process italic matches
     new_text_parts = []
     for part in parts:
@@ -19,7 +21,13 @@ def replace_part(parts, pattern, replace_function):
     return new_text_parts
 
 
-def process_inline_formatting(text):
+def replace_content_that_is_too_long(content) -> str:
+    if len(content) > NOTION_CONTENT_MAX_LENGTH:
+        return "This content is too long to be displayed in Notion. There is a 2000 character limit currently."
+    return content
+
+
+def process_inline_formatting(text) -> list[dict]:
     """
     Process inline formatting in Markdown text and convert it to Notion rich text formatting.
     """
@@ -33,11 +41,12 @@ def process_inline_formatting(text):
     link_pattern = r"\[(.+?)\]\((.+?)\)"
     bold_italic_pattern = r"(__\*(.+?)\*__)|(\*\*_(.+?)_\*\*)"
 
-    def replace_katex(match):
+    def replace_katex(match) -> dict:
         return {"type": "equation", "equation": {"expression": match.group(1)}}
 
-    def replace_bolditalic(match):
+    def replace_bolditalic(match) -> dict:
         content = match.group(2) or match.group(4)
+        content = replace_content_that_is_too_long(content)
         return {
             "type": "text",
             "text": {"content": content, "link": None},
@@ -54,10 +63,12 @@ def process_inline_formatting(text):
         }
 
     # Replace markdown with Notion rich text formatting
-    def replace_code(match):
+    def replace_code(match) -> dict:
+        content = match.group(1)
+        content = replace_content_that_is_too_long(content)
         return {
             "type": "text",
-            "text": {"content": match.group(1), "link": None},
+            "text": {"content": content, "link": None},
             "annotations": {
                 "bold": False,
                 "italic": False,
@@ -66,15 +77,17 @@ def process_inline_formatting(text):
                 "code": True,
                 "color": "default",
             },
-            "plain_text": match.group(1),
+            "plain_text": content,
             "href": None,
         }
 
     # Replace markdown with Notion rich text formatting
-    def replace_overline(match):
+    def replace_overline(match) -> dict:
+        content = match.group(1)
+        content = replace_content_that_is_too_long(content)
         return {
             "type": "text",
-            "text": {"content": match.group(1), "link": None},
+            "text": {"content": content, "link": None},
             "annotations": {
                 "bold": False,
                 "italic": False,
@@ -83,15 +96,17 @@ def process_inline_formatting(text):
                 "code": False,
                 "color": "default",
             },
-            "plain_text": match.group(1),
+            "plain_text": content,
             "href": None,
         }
 
     # Replace markdown with Notion rich text formatting
-    def replace_bold(match):
+    def replace_bold(match) -> dict:
+        content = match.group(2) or match.group(4)
+        content = replace_content_that_is_too_long(content)
         return {
             "type": "text",
-            "text": {"content": match.group(2) or match.group(4), "link": None},
+            "text": {"content": content, "link": None},
             "annotations": {
                 "bold": True,
                 "italic": False,
@@ -100,14 +115,16 @@ def process_inline_formatting(text):
                 "code": False,
                 "color": "default",
             },
-            "plain_text": match.group(2) or match.group(4),
+            "plain_text": content,
             "href": None,
         }
 
-    def replace_italic(match):
+    def replace_italic(match) -> dict:
+        content = match.group(2) or match.group(4)
+        content = replace_content_that_is_too_long(content)
         return {
             "type": "text",
-            "text": {"content": match.group(2) or match.group(4), "link": None},
+            "text": {"content": content, "link": None},
             "annotations": {
                 "bold": False,
                 "italic": True,
@@ -116,14 +133,16 @@ def process_inline_formatting(text):
                 "code": False,
                 "color": "default",
             },
-            "plain_text": match.group(2) or match.group(4),
+            "plain_text": content,
             "href": None,
         }
 
-    def replace_link(match):
+    def replace_link(match) -> dict:
+        content = match.group(1)
+        content = replace_content_that_is_too_long(content)
         return {
             "type": "text",
-            "text": {"content": match.group(1), "link": {"url": match.group(2)}},
+            "text": {"content": content, "link": {"url": match.group(2)}},
             "annotations": {
                 "bold": False,
                 "italic": False,
@@ -132,7 +151,7 @@ def process_inline_formatting(text):
                 "code": False,
                 "color": "default",
             },
-            "plain_text": match.group(1),
+            "plain_text": content,
             "href": match.group(2),
         }
 
@@ -165,7 +184,7 @@ def process_inline_formatting(text):
 
 
 # katex
-def convert_markdown_table_to_latex(text):
+def convert_markdown_table_to_latex(text) -> str:
     split_column = text.split("\n")
     has_header = False
     # Check if the second line is a delimiter
@@ -197,7 +216,7 @@ def convert_markdown_table_to_latex(text):
     return add_table
 
 
-def parse_markdown_to_notion_blocks(markdown):
+def parse_markdown_to_notion_blocks(markdown) -> list[dict]:
     """
     Parse Markdown text and convert it into a list of Notion blocks.
 
@@ -221,9 +240,9 @@ def parse_markdown_to_notion_blocks(markdown):
     horizontal_line_pattern = r"^-{3,}$"
     image_pattern = r"!\[(.*?)\]\((.*?)\)"
 
-    code_blocks = {}
+    code_blocks: dict = {}
 
-    def replace_code_blocks(match):
+    def replace_code_blocks(match) -> str:
         index = len(code_blocks)
         language, content = match.group(1), match.group(2)
         code_blocks[index] = (language or "plain text").strip(), content.strip()
@@ -233,9 +252,9 @@ def parse_markdown_to_notion_blocks(markdown):
     markdown = code_block_pattern.sub(replace_code_blocks, markdown)
 
     # katex
-    latex_blocks = {}
+    latex_blocks: dict = {}
 
-    def replace_latex_blocks(match):
+    def replace_latex_blocks(match) -> str:
         index = len(latex_blocks)
         latex_blocks[index] = (match.group(1) + "").strip()
         return f"LATEX_BLOCK_{index}"
@@ -244,10 +263,10 @@ def parse_markdown_to_notion_blocks(markdown):
     markdown = latex_block_pattern.sub(replace_latex_blocks, markdown)
 
     lines = markdown.split("\n")
-    blocks = []
+    blocks: list[dict] = []
 
     # Initialize variables to keep track of the current table
-    current_table = []
+    current_table: list[str] = []
     in_table = False
 
     current_indent = 0
@@ -369,7 +388,9 @@ def parse_markdown_to_notion_blocks(markdown):
                         "type": "code",
                         "code": {
                             "language": "plain text",
-                            "rich_text": [{"type": "text", "text": {"content": code_block}}],
+                            "rich_text": [
+                                {"type": "text", "text": {"content": replace_content_that_is_too_long(code_block)}}
+                            ],
                         },
                     }
                 )
@@ -416,7 +437,12 @@ def parse_markdown_to_notion_blocks(markdown):
                 {
                     "object": "block",
                     "type": "code",
-                    "code": {"language": language, "rich_text": [{"type": "text", "text": {"content": code_block}}]},
+                    "code": {
+                        "language": language,
+                        "rich_text": [
+                            {"type": "text", "text": {"content": replace_content_that_is_too_long(code_block)}}
+                        ],
+                    },
                 }
             )
 
@@ -428,7 +454,7 @@ def parse_markdown_to_notion_blocks(markdown):
 
         # Image blocks
         elif image_match:
-            block = {
+            block: dict = {
                 "object": "block",
                 "type": "image",
                 "image": {
@@ -462,7 +488,10 @@ def parse_markdown_to_notion_blocks(markdown):
             {
                 "object": "block",
                 "type": "code",
-                "code": {"language": "plain text", "rich_text": [{"type": "text", "text": {"content": code_block}}]},
+                "code": {
+                    "language": "plain text",
+                    "rich_text": [{"type": "text", "text": {"content": replace_content_that_is_too_long(code_block)}}],
+                },
             }
         )
 

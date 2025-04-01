@@ -5,6 +5,7 @@ from nogisync.markdown import (
     convert_markdown_table_to_latex,
     parse_markdown_to_notion_blocks,
     process_inline_formatting,
+    replace_content_that_is_too_long,
 )
 
 
@@ -341,4 +342,12 @@ class TestMarkdown(TestCase):
         self.assertEqual(
             result[2]["bulleted_list_item"]["children"][0]["numbered_list_item"]["rich_text"][0]["text"]["content"],
             "Third nested numbered list item.",
+        )
+
+    def test_replace_content_that_is_too_long(self):
+        text = "*" * 2001
+        result = replace_content_that_is_too_long(text)
+        self.assertEqual(len(result), 94)
+        self.assertEqual(
+            result, "This content is too long to be displayed in Notion. There is a 2000 character limit currently."
         )
