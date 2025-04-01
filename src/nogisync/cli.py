@@ -23,7 +23,10 @@ def process_page_hierarchy(client, base_parent_id: str, relative_path: Path) -> 
         else:
             # Create new parent page
             new_page = notion.create_notion_page(client, current_parent_id, page_title, "")
-            current_parent_id = new_page["id"]
+            if new_page:
+                current_parent_id = new_page["id"]
+            else:
+                raise Exception(f"Failed to create new parent page: {page_title}")
 
     return current_parent_id
 

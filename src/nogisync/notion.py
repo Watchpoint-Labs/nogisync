@@ -1,3 +1,4 @@
+import logging
 from typing import cast
 
 import notion_client
@@ -32,40 +33,46 @@ def find_notion_page(client: notion_client.Client, title: str, parent_id: str | 
 
 def create_notion_page(client: notion_client.Client, parent_page_id: str, title: str, content: str) -> dict:
     """Create a new page in Notion."""
-    blocks = parse_md(content)
+    try:
+        blocks = parse_md(content)
 
-    # Create the page
-    new_page = cast(
-        dict,
-        client.pages.create(
-            parent={"page_id": parent_page_id},
-            properties={"title": [{"text": {"content": title}}]},
-            children=[],
-        ),
-    )
+        # Create the page
+        new_page = cast(
+            dict,
+            client.pages.create(
+                parent={"page_id": parent_page_id},
+                properties={"title": [{"text": {"content": title}}]},
+                children=[],
+            ),
+        )
 
-    # Add the blocks to the page
-    while len(blocks) > 100:
-        client.blocks.children.append(block_id=new_page["id"], children=blocks[:100])
-        blocks = blocks[100:]
+        # Add the blocks to the page
+        while len(blocks) > 100:
+            client.blocks.children.append(block_id=new_page["id"], children=blocks[:100])
+            blocks = blocks[100:]
 
-    client.blocks.children.append(block_id=new_page["id"], children=blocks)
+        client.blocks.children.append(block_id=new_page["id"], children=blocks)
 
-    return cast(dict, new_page)
+        return cast(dict, new_page)
+    except notion_client.errors.APIResponseError as e:
+        logging.error(e)
+        return {}
 
 
 def update_notion_page(client: notion_client.Client, page_id: str, content: str) -> None:
     """Update an existing Notion page."""
-    blocks = parse_md(content)
+    try:
+        blocks = parse_md(content)
+        # First, delete existing blocks
+        existing_blocks = cast(dict, client.blocks.children.list(block_id=page_id)).get("results", [])
+        for block in existing_blocks:
+            client.blocks.delete(block_id=block["id"])
 
-    # First, delete existing blocks
-    existing_blocks = cast(dict, client.blocks.children.list(block_id=page_id)).get("results", [])
-    for block in existing_blocks:
-        client.blocks.delete(block_id=block["id"])
+        # Then add new blocks
+        while len(blocks) > 100:
+            client.blocks.children.append(block_id=page_id, children=blocks[:100])
+            blocks = blocks[100:]
 
-    # Then add new blocks
-    while len(blocks) > 100:
-        client.blocks.children.append(block_id=page_id, children=blocks[:100])
-        blocks = blocks[100:]
-
-    client.blocks.children.append(block_id=page_id, children=blocks)
+        client.blocks.children.append(block_id=page_id, children=blocks)
+    except notion_client.errors.APIResponseError as e:
+        logging.error(e)
