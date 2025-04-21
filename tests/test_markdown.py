@@ -1,9 +1,11 @@
+import textwrap
 from unittest import TestCase
 
 from nogisync.markdown import (
     convert_markdown_table_to_latex,
     parse_markdown_to_notion_blocks,
     process_inline_formatting,
+    replace_content_that_is_too_long,
 )
 
 
@@ -271,3 +273,81 @@ class TestMarkdown(TestCase):
         self.assertEqual(len(result), 3)
         self.assertEqual(result[1]["annotations"]["strikethrough"], True)
         self.assertEqual(result[1]["text"]["content"], "struck")
+
+    def test_parse_markdown_to_notion_blocks_mixed_nested_lists_numbered_bulleted(self):
+        text = textwrap.dedent("""
+            1. **First Numbered List Item**:
+               - First nested bulleted list item.
+            2. **Second Numbered List Item**:
+               - Second nested bulleted list item.
+            3. **Third Numbered List Item**:
+               - Third nested bulleted list item.
+        """)
+        result = parse_markdown_to_notion_blocks(text)
+        self.assertEqual(len(result), 3)
+        self.assertEqual(result[0]["type"], "numbered_list_item")
+        self.assertEqual(result[0]["numbered_list_item"]["rich_text"][0]["text"]["content"], "First Numbered List Item")
+        self.assertEqual(result[0]["numbered_list_item"]["children"][0]["type"], "bulleted_list_item")
+        self.assertEqual(
+            result[0]["numbered_list_item"]["children"][0]["bulleted_list_item"]["rich_text"][0]["text"]["content"],
+            "First nested bulleted list item.",
+        )
+        self.assertEqual(result[1]["type"], "numbered_list_item")
+        self.assertEqual(
+            result[1]["numbered_list_item"]["rich_text"][0]["text"]["content"], "Second Numbered List Item"
+        )
+        self.assertEqual(result[1]["numbered_list_item"]["children"][0]["type"], "bulleted_list_item")
+        self.assertEqual(
+            result[1]["numbered_list_item"]["children"][0]["bulleted_list_item"]["rich_text"][0]["text"]["content"],
+            "Second nested bulleted list item.",
+        )
+        self.assertEqual(result[2]["type"], "numbered_list_item")
+        self.assertEqual(result[2]["numbered_list_item"]["rich_text"][0]["text"]["content"], "Third Numbered List Item")
+        self.assertEqual(result[2]["numbered_list_item"]["children"][0]["type"], "bulleted_list_item")
+        self.assertEqual(
+            result[2]["numbered_list_item"]["children"][0]["bulleted_list_item"]["rich_text"][0]["text"]["content"],
+            "Third nested bulleted list item.",
+        )
+
+    def test_parse_markdown_to_notion_blocks_mixed_nested_lists_bulleted_numbered(self):
+        text = textwrap.dedent("""
+            - **First Bulleted List Item**:
+               1. First nested numbered list item.
+            - **Second Bulleted List Item**:
+               1. Second nested numbered list item.
+            - **Third Bulleted List Item**:
+               1. Third nested numbered list item.
+        """)
+        result = parse_markdown_to_notion_blocks(text)
+        self.assertEqual(len(result), 3)
+        self.assertEqual(result[0]["type"], "bulleted_list_item")
+        self.assertEqual(result[0]["bulleted_list_item"]["rich_text"][0]["text"]["content"], "First Bulleted List Item")
+        self.assertEqual(result[0]["bulleted_list_item"]["children"][0]["type"], "numbered_list_item")
+        self.assertEqual(
+            result[0]["bulleted_list_item"]["children"][0]["numbered_list_item"]["rich_text"][0]["text"]["content"],
+            "First nested numbered list item.",
+        )
+        self.assertEqual(result[1]["type"], "bulleted_list_item")
+        self.assertEqual(
+            result[1]["bulleted_list_item"]["rich_text"][0]["text"]["content"], "Second Bulleted List Item"
+        )
+        self.assertEqual(result[1]["bulleted_list_item"]["children"][0]["type"], "numbered_list_item")
+        self.assertEqual(
+            result[1]["bulleted_list_item"]["children"][0]["numbered_list_item"]["rich_text"][0]["text"]["content"],
+            "Second nested numbered list item.",
+        )
+        self.assertEqual(result[2]["type"], "bulleted_list_item")
+        self.assertEqual(result[2]["bulleted_list_item"]["rich_text"][0]["text"]["content"], "Third Bulleted List Item")
+        self.assertEqual(result[2]["bulleted_list_item"]["children"][0]["type"], "numbered_list_item")
+        self.assertEqual(
+            result[2]["bulleted_list_item"]["children"][0]["numbered_list_item"]["rich_text"][0]["text"]["content"],
+            "Third nested numbered list item.",
+        )
+
+    def test_replace_content_that_is_too_long(self):
+        text = "*" * 2001
+        result = replace_content_that_is_too_long(text)
+        self.assertEqual(len(result), 94)
+        self.assertEqual(
+            result, "This content is too long to be displayed in Notion. There is a 2000 character limit currently."
+        )
