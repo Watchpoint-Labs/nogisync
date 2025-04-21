@@ -23,7 +23,7 @@ def replace_part(parts, pattern, replace_function) -> list:
 
 def replace_content_that_is_too_long(content) -> str:
     if len(content) > NOTION_CONTENT_MAX_LENGTH:
-        return "This content is too long to be displayed in Notion. There is a 2000 character limit currently."
+        return f"This content is too long to be displayed in Notion. There is a {NOTION_CONTENT_MAX_LENGTH} character limit currently."
     return content
 
 
