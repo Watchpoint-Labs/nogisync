@@ -76,3 +76,23 @@ class TestNotion(TestCase):
         self.assertEqual(search_args["filter"]["property"], "object")
         self.assertEqual(search_args["filter"]["value"], "page")
         self.assertEqual(result["id"], "page1")
+        
+    def test_find_notion_page_with_parent_with_dashes(self):
+        mock_results = [
+            {
+                "id": "page1",
+                "parent": {"page_id": "dashes-should-be-ignored"},
+                "properties": {"title": {"title": [{"text": {"content": "Test Page"}}]}},
+            }
+        ]
+        self.mock_client.search.return_value = {"results": mock_results}
+        parent_id = "dashesshouldbeignored"
+
+        result = find_notion_page(self.mock_client, self.mock_title, parent_id=parent_id)
+
+        self.mock_client.search.assert_called_once()
+        search_args = self.mock_client.search.call_args[1]
+        self.assertIn("filter", search_args)
+        self.assertEqual(search_args["filter"]["property"], "object")
+        self.assertEqual(search_args["filter"]["value"], "page")
+        self.assertEqual(result["id"], "page1")

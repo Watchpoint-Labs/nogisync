@@ -26,8 +26,10 @@ def find_notion_page(client: notion_client.Client, title: str, parent_id: str | 
         if result.get("properties", {}).get("title", {}).get("title", [{}])[0].get("text", {}).get("content") == title:
             if not parent_id:
                 return result
-            elif parent_id and result.get("parent", {}).get("page_id") == parent_id:
-                return result
+            elif parent_id:
+                result_parent_id = result.get("parent", {}).get("page_id")
+                if result_parent_id and result_parent_id.replace("-", "") == parent_id.replace("-", ""):
+                    return result
     return None
 
 
